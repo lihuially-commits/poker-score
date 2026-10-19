@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#140a10"/>
+<title>扑克记分 · 跑得快 / 掼蛋</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Helvetica Neue',sans-serif;color:#f5f7fa;min-height:100vh;padding:0 16px calc(28px + env(safe-area-inset-bottom));transition:background .5s}
+body[data-mode=setup]{background:radial-gradient(130% 80% at 50% -10%,#2b2140 0%,#171321 60%,#100e17 100%)}
+body[data-mode=pk]{background:radial-gradient(130% 80% at 50% -10%,#4a1520 0%,#22101a 55%,#140a10 100%)}
+body[data-mode=gd]{background:radial-gradient(130% 80% at 50% -10%,#0d3a30 0%,#0a201b 55%,#071410 100%)}
+:root{--card:rgba(255,255,255,.07);--bd:rgba(255,255,255,.14);--sub:rgba(245,247,250,.55)}
+body[data-mode=pk]{--acc1:#ff5f6d;--acc2:#ffc371}
+body[data-mode=gd]{--acc1:#2dd4bf;--acc2:#38bdf8}
+body[data-mode=setup]{--acc1:#a78bfa;--acc2:#f472b6}
+.screen{max-width:520px;margin:0 auto}
+.hidden{display:none!important}
+button{font-family:inherit;touch-action:manipulation;cursor:pointer}
+input{font-size:16px;font-family:inherit}
+
+/* ---------- setup ---------- */
+.brand{font-size:52px;text-align:center;padding-top:calc(34px + env(safe-area-inset-top))}
+h1{text-align:center;font-size:26px;letter-spacing:1px;margin-top:6px}
+.sub{text-align:center;color:var(--sub);font-size:13px;margin-top:6px}
+.step{display:flex;align-items:center;gap:8px;margin:24px 0 12px;font-weight:700;font-size:15px}
+.stepno{width:21px;height:21px;border-radius:50%;background:linear-gradient(135deg,var(--acc1),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}
+.modegrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modecard{background:var(--card);border:1.5px solid var(--bd);border-radius:18px;padding:16px 10px;text-align:center;transition:.2s}
+.modecard .msuit{font-size:30px;margin-bottom:6px}
+.modecard b{display:block;font-size:16px}
+.modecard span{display:block;font-size:12px;color:var(--sub);margin-top:4px}
+.modecard.on{border-color:var(--acc1);background:rgba(255,255,255,.1);box-shadow:0 0 0 1px var(--acc1)}
+.prow{display:grid;grid-template-columns:64px 1fr 96px 20px;gap:8px;align-items:center;margin-bottom:10px}
+.plabel{font-size:14px;color:var(--sub)}
+input[type=text],input[type=number]{height:46px;border-radius:13px;border:1px solid var(--bd);background:rgba(255,255,255,.08);color:#f5f7fa;padding:0 13px;width:100%;outline:none}
+input:focus{border-color:var(--acc1)}
+input::placeholder{color:rgba(245,247,250,.3)}
+.unit{font-size:13px;color:var(--sub)}
+.seg{display:inline-flex;background:rgba(255,255,255,.08);border:1px solid var(--bd);border-radius:12px;padding:3px;gap:3px;margin-bottom:14px}
+.seg button{border:none;background:transparent;color:var(--sub);border-radius:9px;padding:7px 16px;font-size:14px;font-weight:600}
+.seg button.on{background:linear-gradient(135deg,var(--acc1),var(--acc2));color:#fff}
+.tblock{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:12px;margin-bottom:12px}
+.tblock .tname-in{font-weight:700;margin-bottom:10px;height:40px}
+.tblock .m2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ttip{font-size:11.5px;color:var(--sub);margin-top:10px;line-height:1.6}
+.btn{border:none;border-radius:14px;padding:12px 18px;font-size:15px;font-weight:700;color:#f5f7fa;background:rgba(255,255,255,.12)}
+.btn.primary{background:linear-gradient(135deg,var(--acc1),var(--acc2));color:#fff}
+.btn.big{width:100%;padding:15px;font-size:17px;margin-top:18px}
+.btn:disabled{opacity:.4}
+.foot{font-size:11.5px;color:var(--sub);line-height:1.7;margin-top:16px;text-align:center}
+
+/* ---------- game header ---------- */
+.ghead{display:flex;align-items:center;gap:8px;padding-top:calc(16px + env(safe-area-inset-top))}
+.badge{font-size:14px;font-weight:800;background:linear-gradient(135deg,var(--acc1),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.chip{font-size:12px;color:var(--sub);border:1px solid var(--bd);border-radius:99px;padding:4px 10px}
+.iconbtn{margin-left:auto;width:38px;height:38px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:#f5f7fa;font-size:20px;line-height:1}
+.warn{display:flex;align-items:center;gap:10px;margin-top:14px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:#fbbf24;border-radius:14px;padding:10px 12px;font-size:13px;font-weight:600}
+.warn.gold{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.5)}
+.warn button{margin-left:auto;flex-shrink:0;border:none;border-radius:10px;background:#fbbf24;color:#3b2b00;font-size:12.5px;font-weight:800;padding:7px 12px}
+
+/* ---------- score ---------- */
+.pgrid{display:grid;gap:12px;margin:18px 0 6px}
+.pgrid.n3{grid-template-columns:repeat(3,1fr)}
+.pgrid.n4{grid-template-columns:repeat(2,1fr)}
+.pcard{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px 6px 12px;text-align:center;position:relative;overflow:hidden}
+.suit{position:absolute;top:7px;right:9px;opacity:.28;font-size:17px}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--acc1),var(--acc2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;margin:0 auto 7px;color:#fff}
+.pname{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pscore{font-size:33px;font-weight:800;letter-spacing:-.5px;margin:2px 0 6px}
+.duel{display:flex;align-items:stretch;gap:10px;margin:18px 0 6px}
+.tcard{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px 8px;text-align:center}
+.tcard.ta{border-top:3px solid #f87171}
+.tcard.tb{border-top:3px solid #60a5fa}
+.tname{font-size:15px;font-weight:800}
+.tmembers{display:flex;flex-direction:column;gap:5px;margin:9px 0}
+.member{font-size:13px;color:rgba(245,247,250,.8);display:flex;align-items:center;justify-content:center;gap:6px}
+.mavatar{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--acc1),var(--acc2));font-size:11px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.tscore{font-size:36px;font-weight:800;margin:2px 0 8px}
+.winsuffix{font-size:13px;color:var(--sub);font-weight:600}
+.lvrow{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;min-height:22px}
+.lvb{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 3px;border-radius:6px;border:1px solid var(--bd);font-size:10px;font-weight:700;color:var(--sub)}
+.lvb.done{background:rgba(52,211,153,.2);border-color:transparent;color:#4ade80}
+.lvb.cur{border-color:var(--acc1);color:#fff;font-weight:800}
+.vs{align-self:center;font-weight:900;font-size:17px;color:var(--sub)}
+.chip-d{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:800}
+.chip-d.up{background:rgba(52,211,153,.16);color:#4ade80}
+.chip-d.down{background:rgba(251,113,133,.16);color:#fb7185}
+.chip-d.zero{background:rgba(255,255,255,.1);color:var(--sub);font-weight:600}
+.pcard.flash,.tcard.flash{animation:glow 1s}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(255,255,255,.3)}60%{box-shadow:0 0 26px 5px rgba(255,255,255,.14)}100%{box-shadow:none}}
+
+/* ---------- voice & input ---------- */
+.voicepanel{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:18px 14px;text-align:center;margin-top:14px}
+.mic{width:78px;height:78px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--acc1),var(--acc2));font-size:33px;color:#fff;box-shadow:0 10px 26px rgba(0,0,0,.45);position:relative}
+.mic.listening::after{content:'';position:absolute;inset:-9px;border-radius:50%;border:3px solid var(--acc1);animation:pulse 1.2s infinite}
+@keyframes pulse{0%{transform:scale(.88);opacity:.9}100%{transform:scale(1.3);opacity:0}}
+.vstatus{font-size:13px;color:rgba(245,247,250,.75);margin-top:10px;font-weight:600}
+.livetext{font-size:15px;margin-top:8px;color:#fff;font-style:italic}
+.vhint{font-size:11.5px;color:var(--sub);margin-top:9px;line-height:1.6}
+.textrow{display:flex;gap:8px;margin-top:12px}
+.textrow input{flex:1}
+.linkrow{text-align:center;margin-top:12px}
+.linkbtn{border:none;background:transparent;color:var(--acc2);font-size:13.5px;font-weight:700;padding:6px 10px}
+
+/* ---------- history ---------- */
+.histblock{margin-top:20px}
+.histhead{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:800;margin-bottom:8px}
+.hrow{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.hl{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.rno{font-size:13px;font-weight:800}
+.htime{font-size:11px;color:var(--sub)}
+.hchips{display:flex;flex-wrap:wrap;gap:5px;flex:1}
+.hchips .chip-d{font-size:12px;padding:2px 8px}
+.undo{border:1px solid var(--bd);background:transparent;color:var(--sub);border-radius:9px;font-size:12px;padding:5px 9px;flex-shrink:0}
+.empty{text-align:center;color:var(--sub);font-size:13px;padding:18px 0}
+
+/* ---------- overlay / sheet ---------- */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}
+.overlay.on{opacity:1}
+.sheet{width:100%;max-width:520px;background:#20222e;border-radius:22px 22px 0 0;padding:16px 16px calc(22px + env(safe-area-inset-bottom));max-height:84vh;overflow-y:auto;transform:translateY(46px);transition:transform .25s}
+.overlay.on .sheet{transform:none}
+.sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sh-head span{font-size:17px;font-weight:800}
+.sh-x{width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#f5f7fa;font-size:14px}
+.pv-row{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-bottom:1px solid rgba(255,255,255,.07);font-size:15px}
+.pv-sum{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;font-size:14px;font-weight:700}
+.pv-sum .ok{color:#4ade80}.pv-sum .bad{color:#fb7185}
+.pnote{font-size:12px;color:var(--sub);padding:4px 2px}
+.errbox{background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.35);color:#fb7185;border-radius:12px;padding:9px 12px;font-size:13px;margin-top:8px;line-height:1.6}
+.overbox{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:#fbbf24;border-radius:12px;padding:9px 12px;font-size:13px;margin-top:8px;line-height:1.6}
+.goldbox{background:rgba(250,204,21,.14);border:1px solid rgba(250,204,21,.5);color:#facc15;border-radius:12px;padding:9px 12px;font-size:13px;margin-top:8px;line-height:1.6;font-weight:700}
+.btnrow{display:flex;gap:10px;margin-top:16px}
+.btnrow .btn{flex:1}
+.btn.warnbtn{background:#fbbf24;color:#3b2b00}
+.mrow{display:grid;grid-template-columns:64px 96px 1fr;gap:8px;align-items:center;margin-bottom:10px}
+.mname{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg.small{margin:0;display:flex}
+.seg.small button{padding:8px 0;flex:1;font-size:13px}
+.mtotal{font-size:14px;color:var(--sub);padding:8px 2px}
+.mtotal b.ok{color:#4ade80}.mtotal b.bad{color:#fb7185}
+.tpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.tpick button{border:1.5px solid var(--bd);background:var(--card);color:#f5f7fa;border-radius:14px;padding:16px 8px;font-size:15px;font-weight:800}
+.tpick button.on{border-color:var(--acc1);background:rgba(255,255,255,.12);box-shadow:0 0 0 1px var(--acc1)}
+.flab{display:block;font-size:12.5px;color:var(--sub);margin:10px 0 6px}
+.rtip{font-size:13px;color:var(--sub);margin-bottom:12px;line-height:1.6}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:12px}
+.check input{width:18px;height:18px;accent-color:var(--acc1)}
+.menu{display:flex;flex-direction:column;gap:8px}
+.menu button{border:1px solid var(--bd);background:var(--card);color:#f5f7fa;border-radius:14px;padding:14px;font-size:15px;font-weight:700;text-align:left}
+#toast{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(16px);background:rgba(0,0,0,.85);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:86vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body data-mode="setup">
+
+<!-- ========== 初始化界面 ========== -->
+<section id="screen-setup" class="screen">
+  <div class="brand">🂠</div>
+  <h1>扑克记分</h1>
+  <p class="sub">跑得快记积分 · 掼蛋按 2→A 升级</p>
+
+  <div class="step"><span class="stepno">1</span>选择玩法</div>
+  <div class="modegrid" id="modeGrid">
+    <div class="modecard on" data-mode="pk">
+      <div class="msuit">♠</div><b>跑得快</b><span>3–4 人 · 各自计分</span>
+    </div>
+    <div class="modecard" data-mode="gd">
+      <div class="msuit">♣</div><b>掼蛋</b><span>4 人两队 · 2 到 A 升级</span>
+    </div>
+  </div>
+
+  <div class="step"><span class="stepno">2</span><span id="step2Label">玩家与初始总积分</span></div>
+  <div id="setupFields"></div>
+
+  <button id="startBtn" class="btn primary big" type="button">开始记分</button>
+  <p class="foot">建议在 iPhone Safari（iOS 14.5+）中使用语音计分，首次点击麦克风需允许麦克风权限；<br>也可以直接用键盘输入文字记录。本页数据保存在本机浏览器中。</p>
+</section>
+
+<!-- ========== 记分主界面 ========== -->
+<section id="screen-game" class="screen hidden">
+  <header class="ghead">
+    <span id="gameBadge" class="badge">♠ 跑得快</span>
+    <span id="roundChip" class="chip">第 1 轮</span>
+    <button id="menuBtn" class="iconbtn" type="button">⋯</button>
+  </header>
+
+  <div id="warnBanner" class="warn hidden">
+    <span id="warnText"></span>
+    <button id="warnReset" type="button">去重置</button>
+  </div>
+
+  <div id="scoreArea"></div>
+
+  <div class="voicepanel">
+    <button id="micBtn" class="mic" type="button"><span>🎙️</span></button>
+    <div id="voiceStatus" class="vstatus">点击麦克风，说出本轮结果</div>
+    <div id="liveText" class="livetext hidden"></div>
+    <div id="vhint" class="vhint">示例：张三增加12分，李四扣除8分，王五扣除4分</div>
+  </div>
+
+  <div class="textrow">
+    <input id="textInput" type="text" placeholder="或输入文字，如：张三加12，李四扣8">
+    <button id="textBtn" class="btn primary" type="button">记录</button>
+  </div>
+
+  <div class="linkrow"><button id="manualBtn" class="linkbtn" type="button">＋ 手动记分</button></div>
+
+  <div class="histblock">
+    <div class="histhead"><span>最近战绩</span><button id="histAllBtn" class="linkbtn" type="button">全部 ›</button></div>
+    <div id="histList"></div>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+var KEY='pokerScoreV2';
+var LVL=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+/* 跑得快：加/扣分关键词 */
+var ADD_RE=/(增加|加上|获胜|赢了|得分|上分|赢|胜|加|得|\+)/;
+var DEC_RE=/(扣除|减去|输了|下分|扣|减|输|罚|-|−)/;
+/* 掼蛋：获胜/落败关键词 */
+var WIN_RE=/(获胜|赢了|胜了|得胜|赢|胜|升|打过|过|加|得)/;
+var LOSE_RE=/(输了|败了|败|负|输|扣|减)/;
+
+var state=null;
+var setupMode='pk', setupCount=3;
+var draft={pk:{names:['','','',''],pts:['100','100','100','100']},
+           gd:[{n:'甲队',ms:['','']},{n:'乙队',ms:['','']}]};
+
+/* ---------- 存取 ---------- */
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.mode&&s.v===2)return s}catch(e){}return null}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+
+/* ---------- 通用 ---------- */
+function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show')},2300)}
+function balEnts(){return state.mode==='pk'?state.players:state.teams}
+function entById(id){for(var i=0;i<balEnts().length;i++){if(balEnts()[i].id===id)return balEnts()[i]}return null}
+function fmtDelta(d){return (d>0?'+':'')+d}
+function chipHTML(d){return '<span class="chip-d '+(d>0?'up':'down')+'">'+fmtDelta(d)+'</span>'}
+function histChip(e){
+  if(state.mode==='gd')return '<span class="chip-d up">'+esc(e.label)+' +'+e.delta+'级</span>';
+  return '<span class="chip-d '+(e.delta>0?'up':'down')+'">'+esc(e.label)+' '+fmtDelta(e.delta)+'</span>';
+}
+
+/* ---------- 名字扫描与数字解析（语音/文字共用） ---------- */
+function getParseEnts(){
+  if(state.mode==='pk')return state.players.map(function(p){return{id:p.id,name:p.name,label:p.name,team:null}});
+  var list=[];
+  state.teams.forEach(function(t){
+    list.push({id:t.id,name:t.name,label:t.name,team:t});
+    t.members.forEach(function(m){list.push({id:t.id,name:m.name,label:m.name+'（'+t.name+'）',team:t})});
+  });
+  return list;
+}
+function scanNames(text){
+  var ents=getParseEnts().sort(function(a,b){return b.name.length-a.name.length});
+  var hits=[],i=0;
+  while(i<text.length){
+    var m=null;
+    for(var k=0;k<ents.length;k++){if(ents[k].name&&text.startsWith(ents[k].name,i)){m=ents[k];break}}
+    if(m){hits.push({ent:m,start:i,end:i+m.name.length});i+=m.name.length}else i++;
+  }
+  return hits;
+}
+function cnToInt(s){
+  var map={'零':0,'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+  var res=0,cur=0;
+  for(var i=0;i<s.length;i++){
+    var ch=s[i];
+    if(map[ch]!=null){cur=map[ch]}
+    else if(ch==='十'){res+=(cur||1)*10;cur=0}
+    else if(ch==='百'){res+=(cur||1)*100;cur=0}
+    else if(ch==='千'){res+=(cur||1)*1000;cur=0}
+    else return null;
+  }
+  return res+cur;
+}
+function extractNumber(str){
+  var a=str.match(/\d+(?:\.\d+)?/);
+  var c=str.match(/[零一二两三四五六七八九十百千]+/);
+  var ai=a?str.indexOf(a[0]):Infinity, ci=c?str.indexOf(c[0]):Infinity;
+  if(ai<ci)return parseFloat(a[0]);
+  if(c){var v=cnToInt(c[0]);return v>0?v:null}
+  return null;
+}
+
+/* ---------- 跑得快解析 ---------- */
+function parseCommandPK(text){
+  var items=[],errors=[];
+  var hits=scanNames(text);
+  if(!hits.length){errors.push('未识别到任何玩家名字，请说出玩家姓名');return{items:items,errors:errors}}
+  for(var k=0;k<hits.length;k++){
+    var h=hits[k];
+    var chunk=text.slice(h.end, k<hits.length-1?hits[k+1].start:text.length);
+    var addM=ADD_RE.exec(chunk), decM=DEC_RE.exec(chunk);
+    var dir=0;
+    if(addM&&(!decM||addM.index<=decM.index))dir=1;
+    else if(decM)dir=-1;
+    if(!dir){errors.push('“'+h.ent.name+'”后面没有听出是加分还是扣分');continue}
+    var num=extractNumber(chunk);
+    if(num==null||num<=0){errors.push('“'+h.ent.name+'”后面没有听出具体分值');continue}
+    items.push({ent:h.ent,delta:dir*num});
+  }
+  return{items:items,errors:errors};
+}
+
+/* ---------- 掼蛋解析：获胜方升级 1–3 级，另一方不动 ---------- */
+function parseCommandGD(text){
+  var items=[],errors=[],notes=[];
+  var ended=null;
+  state.teams.forEach(function(t){if(t.champion)ended=t});
+  if(ended){errors.push(ended.name+' 已打过 A 夺冠，比赛已结束，请先统计重置');return{items:items,errors:errors,notes:notes}}
+  var hits=scanNames(text);
+  if(!hits.length){errors.push('未识别到队伍或队员名字，请说“甲队获胜”或队员名');return{items:items,errors:errors,notes:notes}}
+  for(var k=0;k<hits.length;k++){
+    var h=hits[k];
+    var chunk=text.slice(h.end, k<hits.length-1?hits[k+1].start:text.length);
+    var w=WIN_RE.exec(chunk), l=LOSE_RE.exec(chunk);
+    var win=null;
+    if(w&&(!l||w.index<=l.index))win=true;
+    else if(l)win=false;
+    if(win===null){errors.push('“'+h.ent.name+'”后面未识别是获胜还是落败');continue}
+    var winner=win?h.ent.team:state.teams.filter(function(t){return t.id!==h.ent.team.id})[0];
+    if(!winner){errors.push('未找到对阵队伍');continue}
+    if(winner.champion){errors.push(winner.name+' 已夺冠，比赛已结束，请先统计重置');continue}
+    var num=extractNumber(chunk);
+    var delta=(num==null)?1:Math.max(1,Math.min(3,Math.round(num)));
+    items.push({ent:{id:winner.id,name:winner.name,label:winner.name,team:winner},delta:delta});
+    notes.push(h.ent.label+(win?' 获胜':' 落败')+' → '+winner.name+' 升 '+delta+' 级');
+  }
+  return{items:items,errors:errors,notes:notes};
+}
+function parseCommand(text){return state.mode==='gd'?parseCommandGD(text):parseCommandPK(text)}
+
+/* ---------- 汇总成本轮账目 ---------- */
+function buildEntries(parsed){
+  if(state.mode==='pk'){
+    return parsed.map(function(p){return{id:p.ent.id,label:p.ent.label,delta:p.delta}});
+  }
+  var map={};
+  state.teams.forEach(function(t){map[t.id]=0});
+  parsed.forEach(function(p){map[p.ent.team.id]+=p.delta});
+  return state.teams.map(function(t){return{id:t.id,label:t.name,delta:map[t.id]}}).filter(function(e){return e.delta!==0});
+}
+function validateEntries(entries){
+  if(state.mode==='gd'){
+    var total=0;entries.forEach(function(e){total+=e.delta});
+    var errs=[];
+    state.teams.forEach(function(t){if(t.champion)errs.push('比赛已结束（'+t.name+' 已夺冠），请先统计重置')});
+    if(entries.length!==1)errs.push('一轮只能有一个获胜方（当前识别到 '+entries.length+' 个）');
+    else if(total<1||total>3)errs.push('升级数需在 1–3 级之间');
+    return{sum:total,over:[],errors:errs};
+  }
+  var sum=0;entries.forEach(function(e){sum+=e.delta});
+  var over=[];
+  entries.forEach(function(e){
+    var ent=entById(e.id);
+    if(ent&&ent.score+e.delta<0)over.push({label:ent.name,after:ent.score+e.delta});
+  });
+  return{sum:sum,over:over,errors:[]};
+}
+
+/* ---------- 记账 ---------- */
+function applyEntries(entries,sign){entries.forEach(function(e){var ent=entById(e.id);if(ent)ent.score+=sign*e.delta})}
+function commit(entries){
+  applyEntries(entries,1);
+  if(state.mode==='gd')entries.forEach(function(e){
+    var t=entById(e.id);
+    if(t.score>12){t.score=12;t.champion=true}
+  });
+  state.history.push({ts:Date.now(),entries:entries.map(function(e){return{id:e.id,label:e.label,delta:e.delta}})});
+  save();renderGame();
+  var ids={};entries.forEach(function(e){ids[e.id]=1});
+  $$('.pcard,.tcard').forEach(function(c){if(ids[c.dataset.id]){c.classList.add('flash');setTimeout(function(){c.classList.remove('flash')},1100)}});
+}
+function undoRound(idx){
+  var h=state.history[idx];if(!h)return;
+  applyEntries(h.entries,-1);
+  if(state.mode==='gd')h.entries.forEach(function(e){
+    var t=entById(e.id);
+    if(t.score<12)t.champion=false;
+    if(t.score<0)t.score=0;
+  });
+  state.history.splice(idx,1);
+  save();renderGame();toast('已撤销该轮记录');
+}
+
+/* ---------- 渲染 ---------- */
+function renderGame(){
+  if(!state){showSetup();return}
+  document.body.dataset.mode=state.mode;
+  $('#screen-setup').classList.add('hidden');
+  $('#screen-game').classList.remove('hidden');
+  $('#gameBadge').textContent=state.mode==='pk'?'♠ 跑得快':'♣ 掼蛋';
+  $('#roundChip').textContent='第 '+(state.history.length+1)+' 轮';
+  $('#vhint').textContent=state.mode==='pk'
+    ?'示例：张三增加12分，李四扣除8分，王五扣除4分'
+    :'示例：甲队获胜 / 张三赢了 / 乙队输了；升 2 级可说“甲队获胜2级”';
+  $('#textInput').placeholder=state.mode==='pk'?'或输入文字，如：张三加12，李四扣8':'或输入文字，如：甲队获胜';
+  renderScore();renderBanner();renderHist();
+}
+function lastDeltaMap(){
+  var last=state.history[state.history.length-1],m={};
+  if(last)last.entries.forEach(function(e){m[e.id]=(m[e.id]||0)+e.delta});
+  return m;
+}
+function renderScore(){
+  var area=$('#scoreArea'),dm=lastDeltaMap();
+  if(state.mode==='pk'){
+    var suits=['♠','♥','♣','♦'];
+    area.innerHTML='<div class="pgrid n'+state.players.length+'">'+state.players.map(function(p,i){
+      return '<div class="pcard" data-id="'+p.id+'">'+
+        '<div class="suit">'+suits[i%4]+'</div>'+
+        '<div class="avatar">'+esc(p.name.slice(0,1))+'</div>'+
+        '<div class="pname">'+esc(p.name)+'</div>'+
+        '<div class="pscore">'+p.score+'</div>'+
+        '<div class="pdelta">'+(dm[p.id]!=null?chipHTML(dm[p.id]):'<span class="chip-d zero">—</span>')+'</div></div>';
+    }).join('')+'</div>';
+  }else{
+    function lvBadges(cur){
+      var s='';
+      for(var i=0;i<13;i++){
+        var cls=i<cur?'done':(i===cur?'cur':'');
+        s+='<span class="lvb '+cls+'">'+(i<cur?'✓':LVL[i])+'</span>';
+      }
+      return s;
+    }
+    function tc(t,cls){
+      var chip=dm[t.id]!=null?'<span class="chip-d up">+'+dm[t.id]+' 级</span>':'<span class="chip-d zero">—</span>';
+      return '<div class="tcard '+cls+'" data-id="'+t.id+'">'+
+        '<div class="tname">'+(t.champion?'🏆 ':'')+esc(t.name)+'</div>'+
+        '<div class="tmembers">'+t.members.map(function(m){return '<span class="member"><span class="mavatar">'+esc(m.name.slice(0,1))+'</span>'+esc(m.name)+'</span>'}).join('')+'</div>'+
+        '<div class="tscore">'+LVL[t.score]+'<span class="winsuffix"> 级</span></div>'+
+        '<div class="lvrow">'+lvBadges(t.score)+'</div>'+
+        '<div class="pdelta" style="margin-top:8px">'+chip+'</div></div>';
+    }
+    area.innerHTML='<div class="duel">'+tc(state.teams[0],'ta')+'<div class="vs">VS</div>'+tc(state.teams[1],'tb')+'</div>';
+  }
+}
+function renderBanner(){
+  var b=$('#warnBanner');
+  if(state.mode==='gd'){
+    var champ=null;
+    state.teams.forEach(function(t){if(t.champion)champ=t});
+    if(champ){
+      $('#warnText').textContent='🏆 '+champ.name+' 已打过 A 夺得冠军，建议统计重置开始新一局';
+      b.classList.add('gold');b.classList.remove('hidden');
+    }else{b.classList.add('hidden')}
+    return;
+  }
+  b.classList.remove('gold');
+  var negs=balEnts().filter(function(e){return e.score<0});
+  if(negs.length){
+    $('#warnText').textContent='⚠️ '+negs.map(function(n){return n.name}).join('、')+' 积分已透支，建议统计重置';
+    b.classList.remove('hidden');
+  }else b.classList.add('hidden');
+}
+function renderHist(){
+  var list=$('#histList'),allBtn=$('#histAllBtn');
+  allBtn.style.display=state.history.length?'':'none';
+  var recent=state.history.slice(-4).reverse();
+  if(!recent.length){
+    list.innerHTML='<div class="empty">'+(state.mode==='pk'?'暂无战绩，说一句“张三增加12分…”开始吧':'暂无战绩，说一句“甲队获胜”开始吧')+'</div>';
+    return;
+  }
+  list.innerHTML=recent.map(function(h,ri){
+    var idx=state.history.length-1-ri;
+    var d=new Date(h.ts);
+    var time=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+    return '<div class="hrow"><div class="hl"><span class="rno">第'+(idx+1)+'轮</span><span class="htime">'+time+'</span></div>'+
+      '<div class="hchips">'+h.entries.map(histChip).join('')+'</div>'+
+      '<button class="undo" data-idx="'+idx+'" type="button">撤销</button></div>';
+  }).join('');
+}
+
+/* ---------- 弹层 ---------- */
+var overlayEl=null;
+function openSheet(title,bodyHTML){
+  closeSheet();
+  var ov=document.createElement('div');ov.className='overlay';
+  ov.innerHTML='<div class="sheet"><div class="sh-head"><span>'+title+'</span><button class="sh-x" type="button">✕</button></div><div class="sh-body">'+bodyHTML+'</div></div>';
+  document.body.appendChild(ov);
+  requestAnimationFrame(function(){ov.classList.add('on')});
+  ov.querySelector('.sh-x').onclick=closeSheet;
+  ov.addEventListener('click',function(e){if(e.target===ov)closeSheet()});
+  overlayEl=ov;
+  return ov;
+}
+function closeSheet(){if(overlayEl){overlayEl.remove();overlayEl=null}}
+
+/* ---------- 确认预览（自动比对） ---------- */
+function pvRow(label,delta){return '<div class="pv-row"><span>'+esc(label)+'</span>'+chipHTML(delta)+'</div>'}
+function openPreview(parsed,errors,notes){
+  errors=errors||[];notes=notes||[];
+  var entries=buildEntries(parsed);
+  var v=validateEntries(entries);
+  var rows='';
+  if(state.mode==='gd'){
+    rows=entries.map(function(e){
+      return '<div class="pv-row"><span>'+esc(e.label)+'</span><span class="chip-d up">+'+e.delta+' 级</span></div>';
+    }).join('');
+    if(entries.length===1){
+      var t=entById(entries[0].id);
+      var from=t.score,to=from+entries[0].delta;
+      rows+='<div class="pv-sum"><span>获胜方：'+esc(t.name)+'（打 '+LVL[from]+' → 打 '+LVL[Math.min(12,to)]+(to>12?'，夺冠':'')+'）</span><b class="ok">✓</b></div>';
+      if(to>12)rows+='<div class="goldbox">🏆 '+esc(t.name)+' 将打过 A 夺得冠军！</div>';
+    }
+    notes.forEach(function(n){rows+='<div class="pnote">'+esc(n)+'</div>'});
+  }else{
+    rows=entries.map(function(e){return pvRow(e.label,e.delta)}).join('')+
+      '<div class="pv-sum"><span>合计（增减应相抵为 0）</span><b class="'+(v.sum===0?'ok':'bad')+'">'+fmtDelta(v.sum)+(v.sum===0?' ✓':' ✗')+'</b></div>';
+  }
+  errors.concat(v.errors).forEach(function(e){rows+='<div class="errbox">✕ '+esc(e)+'</div>'});
+  v.over.forEach(function(o){rows+='<div class="overbox">⚠️ '+esc(o.label)+' 扣分后积分为 '+o.after+'，已超过其总积分，建议进行统计重置</div>'});
+  rows+='<div class="btnrow"><button class="btn" id="pvCancel" type="button">取消</button>';
+  if(v.over.length)rows+='<button class="btn warnbtn" id="pvResetBtn" type="button">统计重置</button>';
+  rows+='<button class="btn primary" id="pvOk" type="button">'+(v.over.length?'仍要记录':'确认记录')+'</button></div>';
+  var ov=openSheet('第 '+(state.history.length+1)+' 轮确认',rows);
+  var ok=ov.querySelector('#pvOk');
+  var blocked=state.mode==='gd'?(errors.length||v.errors.length):(errors.length||v.sum!==0);
+  if(blocked){ok.disabled=true;ok.textContent='无法确认'}
+  ov.querySelector('#pvCancel').onclick=closeSheet;
+  var rb=ov.querySelector('#pvResetBtn');
+  if(rb)rb.onclick=function(){closeSheet();openReset()};
+  ok.onclick=function(){
+    var re=validateEntries(entries);
+    var reBlocked=state.mode==='gd'?(errors.length||re.errors.length):(errors.length||re.sum!==0);
+    if(reBlocked)return;
+    commit(entries);closeSheet();
+    toast('第 '+state.history.length+' 轮已记录 ✓');
+  };
+}
+
+/* ---------- 语音识别 ---------- */
+var rec=null,listening=false;
+function setListening(b){
+  listening=b;
+  $('#micBtn').classList.toggle('listening',b);
+  $('#voiceStatus').textContent=b?'正在聆听…请说出本轮结果':'点击麦克风，说出本轮结果';
+}
+function startVoice(){
+  if(!window.isSecureContext){toast('当前页面非 HTTPS，浏览器已禁用语音识别。请用下方文字输入（或 iOS 键盘听写），或将本页部署到 HTTPS');return}
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('当前浏览器不支持语音识别，建议改用 Safari，或直接用下方文字输入');return}
+  try{rec=new SR()}catch(e){toast('语音识别初始化失败，请用下方文字输入');return}
+  rec.lang='zh-CN';rec.interimResults=true;rec.maxAlternatives=1;rec.continuous=false;
+  var finalText='',interim='',gotResult=false;
+  rec.onresult=function(e){
+    gotResult=true;finalText='';interim='';
+    for(var i=0;i<e.results.length;i++){
+      var r=e.results[i];
+      if(r.isFinal)finalText+=r[0].transcript;else interim+=r[0].transcript;
+    }
+    var lt=$('#liveText');
+    lt.textContent=finalText+interim;
+    if(finalText||interim)lt.classList.remove('hidden');
+  };
+  rec.onerror=function(e){
+    var er=e.error;
+    if(er==='aborted')return; /* 手动停止 */
+    if(er==='not-allowed'||er==='service-not-allowed')toast('麦克风权限被拒绝：请在浏览器/系统设置中允许此页面使用麦克风');
+    else if(er==='no-speech')toast('没有听到声音，请靠近手机用正常音量再说一次');
+    else if(er==='network')toast('语音服务网络不通（Chrome 的语音服务在国内网络常不可用，建议改用 Safari，或用下方文字输入）');
+    else if(er==='audio-capture')toast('未检测到麦克风设备');
+    else toast('语音识别出错：'+er+'，请用下方文字输入');
+  };
+  rec.onend=function(){
+    setListening(false);
+    var text=(finalText||interim||'').trim();
+    if(text){handleParsedText(text)}
+    else if(!gotResult){toast('未识别到内容，请再试一次，或用下方文字输入');}
+  };
+  try{rec.start();setListening(true)}catch(e){toast('无法启动语音识别（'+e.message+'），请用下方文字输入')}
+}
+function stopVoice(){try{if(rec)rec.stop()}catch(e){}}
+function handleParsedText(text){
+  var r=parseCommand(text);
+  if(!r.items.length){toast(r.errors[0]||'未能识别，请换个说法或用文字输入');$('#textInput').value=text;return}
+  openPreview(r.items,r.errors,r.notes);
+}
+
+/* ---------- 手动记分 ---------- */
+function openManual(){
+  if(state.mode==='pk'){
+    var rows=state.players.map(function(p){
+      return '<div class="mrow" data-id="'+p.id+'"><span class="mname">'+esc(p.name)+'</span>'+
+        '<div class="seg small"><button type="button" class="on" data-d="1">加</button><button type="button" data-d="-1">扣</button></div>'+
+        '<input class="mamt" type="number" inputmode="numeric" min="0" placeholder="分值"></div>';
+    }).join('');
+    var ov=openSheet('手动记分',rows+
+      '<div class="mtotal">合计 <b id="mSum" class="ok">0</b>（需为 0 才能记录）</div>'+
+      '<div class="btnrow"><button class="btn" id="mCancel" type="button">取消</button><button class="btn primary" id="mOk" type="button">下一步</button></div>');
+    function collect(){
+      var items=[];
+      ov.querySelectorAll('.mrow').forEach(function(r){
+        var amt=parseFloat(r.querySelector('.mamt').value);
+        if(amt>0){
+          var d=parseInt(r.querySelector('.seg .on').getAttribute('data-d'),10);
+          var p=state.players.filter(function(x){return x.id===r.getAttribute('data-id')})[0];
+          items.push({ent:p,delta:d*amt});
+        }
+      });
+      return items;
+    }
+    function upd(){
+      var s=0;collect().forEach(function(i){s+=i.delta});
+      var el=ov.querySelector('#mSum');el.textContent=fmtDelta(s);el.className=s===0?'ok':'bad';
+    }
+    ov.querySelector('.sh-body').addEventListener('click',function(e){
+      var b=e.target.closest('button[data-d]');if(!b)return;
+      var seg=b.closest('.seg');
+      seg.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');upd();
+    });
+    ov.querySelector('.sh-body').addEventListener('input',upd);
+    ov.querySelector('#mCancel').onclick=closeSheet;
+    ov.querySelector('#mOk').onclick=function(){
+      var items=collect();
+      if(!items.length){toast('请至少填写一个人的分值');return}
+      openPreview(items);
+    };
+  }else{
+    var tp=state.teams.map(function(t){
+      return '<button type="button" data-t="'+t.id+'">'+esc(t.name)+'<br><small style="font-weight:400;font-size:11px;color:var(--sub)">'+t.members.map(function(m){return esc(m.name)}).join(' / ')+'</small></button>';
+    }).join('');
+    var ov2=openSheet('手动记分（掼蛋）',
+      '<p class="rtip" style="margin-bottom:10px">选择本轮获胜队伍（对方等级不动）：</p>'+
+      '<div class="tpick">'+tp+'</div>'+
+      '<label class="flab">升几级（1–3 级，默认 1；双上可填 2–3）</label>'+
+      '<input id="gLv" type="number" inputmode="numeric" min="1" max="3" value="1">'+
+      '<div class="btnrow"><button class="btn" id="mCancel2" type="button">取消</button><button class="btn primary" id="mOk2" type="button">下一步</button></div>');
+    var picked=null;
+    ov2.querySelector('.tpick').addEventListener('click',function(e){
+      var b=e.target.closest('button[data-t]');if(!b)return;
+      ov2.querySelectorAll('.tpick button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');picked=b.getAttribute('data-t');
+    });
+    ov2.querySelector('#mCancel2').onclick=closeSheet;
+    ov2.querySelector('#mOk2').onclick=function(){
+      if(!picked){toast('请先选择获胜队伍');return}
+      var lv=parseInt(ov2.querySelector('#gLv').value,10);
+      if(isNaN(lv))lv=1;
+      if(lv<1||lv>3){toast('升级数需在 1–3 之间');return}
+      var t=state.teams.filter(function(x){return x.id===picked})[0];
+      var ended=null;
+      state.teams.forEach(function(x){if(x.champion)ended=x});
+      if(ended){toast(ended.name+' 已夺冠，比赛已结束，请先统计重置');return}
+      openPreview([{ent:{id:t.id,name:t.name,label:t.name,team:t},delta:lv}]);
+    };
+  }
+}
+
+/* ---------- 统计重置 ---------- */
+function openReset(){
+  if(state.mode==='gd'){
+    var ov=openSheet('统计重置',
+      '<p class="rtip">将两队的等级重置为 2（重新从 2 打起），并清除冠军标记。</p>'+
+      '<label class="check"><input type="checkbox" id="rClear" checked> 同时清空战绩记录</label>'+
+      '<div class="btnrow"><button class="btn" id="rCancel" type="button">取消</button><button class="btn primary" id="rOk" type="button">确认重置</button></div>');
+    ov.querySelector('#rCancel').onclick=closeSheet;
+    ov.querySelector('#rOk').onclick=function(){
+      state.teams.forEach(function(t){t.score=0;t.champion=false});
+      if(ov.querySelector('#rClear').checked)state.history=[];
+      save();closeSheet();renderGame();toast('已完成统计重置 ✓');
+    };
+    return;
+  }
+  var ents=balEnts();
+  var rows=ents.map(function(e){
+    return '<div class="mrow" style="grid-template-columns:72px 1fr"><span class="mname">'+esc(e.name)+'</span>'+
+      '<input class="rin" type="number" inputmode="numeric" value="'+e.initial+'"></div>';
+  }).join('');
+  var ov2=openSheet('统计重置',
+    '<p class="rtip">将各玩家积分重置为新的初始总积分：</p>'+rows+
+    '<label class="check"><input type="checkbox" id="rClear" checked> 同时清空战绩记录</label>'+
+    '<div class="btnrow"><button class="btn" id="rCancel" type="button">取消</button><button class="btn primary" id="rOk" type="button">确认重置</button></div>');
+  ov2.querySelector('#rCancel').onclick=closeSheet;
+  ov2.querySelector('#rOk').onclick=function(){
+    ov2.querySelectorAll('.mrow').forEach(function(r,i){
+      var v=parseFloat(r.querySelector('.rin').value);
+      if(isNaN(v))v=ents[i].initial;
+      ents[i].initial=v;ents[i].score=v;
+    });
+    if(ov2.querySelector('#rClear').checked)state.history=[];
+    save();closeSheet();renderGame();toast('已完成统计重置 ✓');
+  };
+}
+
+/* ---------- 全部战绩 ---------- */
+function openHistAll(){
+  if(!state.history.length){toast('暂无战绩');return}
+  var rows=state.history.map(function(h,i){
+    var d=new Date(h.ts);
+    var time=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+    return '<div class="hrow"><div class="hl"><span class="rno">第'+(i+1)+'轮</span><span class="htime">'+time+'</span></div>'+
+      '<div class="hchips">'+h.entries.map(histChip).join('')+'</div>'+
+      '<button class="undo" data-idx="'+i+'" type="button">撤销</button></div>';
+  }).reverse().join('');
+  var ov=openSheet('全部战绩',rows+
+    '<div class="btnrow"><button class="btn warnbtn" id="hClear" type="button">清空战绩（保留'+(state.mode==='pk'?'积分':'等级')+'）</button></div>');
+  ov.querySelector('.sh-body').addEventListener('click',function(e){
+    var b=e.target.closest('.undo');if(!b)return;
+    if(confirm('撤销第 '+(parseInt(b.getAttribute('data-idx'),10)+1)+' 轮记录？')){
+      undoRound(parseInt(b.getAttribute('data-idx'),10));
+      closeSheet();
+    }
+  });
+  ov.querySelector('#hClear').onclick=function(){
+    if(confirm('确定清空所有战绩记录？当前状态保持不变。')){state.history=[];save();closeSheet();renderGame();toast('战绩已清空')}
+  };
+}
+
+/* ---------- 菜单 ---------- */
+function openMenu(){
+  var ov=openSheet('更多操作',
+    '<div class="menu">'+
+    '<button data-a="hist" type="button">📜 全部战绩</button>'+
+    '<button data-a="undo" type="button">↩️ 撤销上一轮</button>'+
+    '<button data-a="reset" type="button">🔄 统计重置</button>'+
+    '<button data-a="reinit" type="button">⚙️ 重新初始化（换玩法 / 换人）</button></div>');
+  ov.querySelector('.sh-body').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-a]');if(!b)return;
+    var a=b.getAttribute('data-a');
+    if(a==='hist')openHistAll();
+    else if(a==='undo'){
+      if(!state.history.length){toast('暂无可撤销的记录');return}
+      undoRound(state.history.length-1);closeSheet();
+    }
+    else if(a==='reset'){closeSheet();openReset()}
+    else if(a==='reinit'){
+      if(confirm('确定重新初始化？将清空全部玩家、状态与战绩。')){
+        state=null;localStorage.removeItem(KEY);closeSheet();showSetup();
+      }
+    }
+  });
+}
+
+/* ---------- 初始化界面 ---------- */
+function showSetup(){
+  document.body.dataset.mode='setup';
+  $('#screen-game').classList.add('hidden');
+  $('#screen-setup').classList.remove('hidden');
+  $$('#modeGrid .modecard').forEach(function(c){c.classList.toggle('on',c.getAttribute('data-mode')===setupMode)});
+  $('#step2Label').textContent=setupMode==='pk'?'玩家与初始总积分':'两队队员（掼蛋 2→A 升级）';
+  renderSetupFields();
+}
+function harvestDraft(){
+  if(setupMode==='pk'){
+    $$('#setupFields .pname-in').forEach(function(el,i){draft.pk.names[i]=el.value});
+    $$('#setupFields .ppts-in').forEach(function(el,i){draft.pk.pts[i]=el.value});
+  }else{
+    $$('#setupFields .tblock').forEach(function(b,i){
+      draft.gd[i]={n:b.querySelector('.tname-in').value,ms:Array.prototype.map.call(b.querySelectorAll('.pname-in'),function(x){return x.value})};
+    });
+  }
+}
+function renderSetupFields(){
+  var box=$('#setupFields');
+  if(setupMode==='pk'){
+    var html='<div class="seg" id="countSeg"><button type="button" data-c="3" class="'+(setupCount===3?'on':'')+'">3 人</button><button type="button" data-c="4" class="'+(setupCount===4?'on':'')+'">4 人</button></div>';
+    for(var i=0;i<setupCount;i++){
+      html+='<div class="prow"><span class="plabel">玩家'+(i+1)+'</span>'+
+        '<input class="pname-in" type="text" placeholder="姓名" value="'+esc(draft.pk.names[i]||'')+'">'+
+        '<input class="ppts-in" type="number" inputmode="numeric" value="'+esc(draft.pk.pts[i]||'100')+'">'+
+        '<span class="unit">分</span></div>';
+    }
+    box.innerHTML=html;
+  }else{
+    var teams=['#f87171','#60a5fa'];
+    box.innerHTML=draft.gd.map(function(t,i){
+      return '<div class="tblock" style="border-top:3px solid '+teams[i]+'">'+
+        '<input class="tname-in" type="text" value="'+esc(t.n)+'">'+
+        '<div class="m2">'+
+        '<input class="pname-in" type="text" placeholder="队员1姓名" value="'+esc(t.ms[0]||'')+'">'+
+        '<input class="pname-in" type="text" placeholder="队员2姓名" value="'+esc(t.ms[1]||'')+'"></div>'+
+        (i===0?'<div class="ttip">掼蛋按 2 3 4 5 6 7 8 9 10 J Q K A 升级：每胜一局，获胜方升 1 级（另一队不动），打过 A 夺冠；双上可说“甲队获胜2级”。</div>':'')+
+        '</div>';
+    }).join('');
+  }
+}
+
+/* ---------- 事件绑定 ---------- */
+$('#modeGrid').addEventListener('click',function(e){
+  var c=e.target.closest('.modecard');if(!c)return;
+  harvestDraft();
+  setupMode=c.getAttribute('data-mode');
+  showSetup();
+});
+$('#setupFields').addEventListener('click',function(e){
+  var b=e.target.closest('#countSeg button');if(!b)return;
+  harvestDraft();
+  setupCount=parseInt(b.getAttribute('data-c'),10);
+  renderSetupFields();
+});
+$('#startBtn').addEventListener('click',function(){
+  if(setupMode==='pk'){
+    var names=$$('#setupFields .pname-in').map(function(x){return x.value.trim()});
+    var pts=$$('#setupFields .ppts-in').map(function(x){return parseFloat(x.value)});
+    if(names.some(function(n){return !n})){toast('请填写所有玩家姓名');return}
+    if(new Set(names).size!==names.length){toast('玩家姓名不能重复');return}
+    if(pts.some(function(p){return isNaN(p)||p<0})){toast('请填写有效的初始积分（≥0）');return}
+    state={mode:'pk',v:2,players:names.map(function(n,i){return{id:'p'+i,name:n,initial:pts[i],score:pts[i]}}),history:[]};
+  }else{
+    var blocks=$$('#setupFields .tblock');
+    var ts=blocks.map(function(b,i){
+      return{
+        name:b.querySelector('.tname-in').value.trim()||('第'+(i+1)+'队'),
+        ms:Array.prototype.map.call(b.querySelectorAll('.pname-in'),function(x){return x.value.trim()})
+      };
+    });
+    var all=[];ts.forEach(function(t){all=all.concat(t.ms)});
+    if(all.some(function(n){return !n})){toast('请填写所有队员姓名');return}
+    if(new Set(all).size!==all.length){toast('队员姓名不能重复');return}
+    state={mode:'gd',v:2,teams:ts.map(function(t,i){return{id:'t'+i,name:t.name,members:t.ms.map(function(m,j){return{id:'m'+i+j,name:m}}),score:0,champion:false}}),history:[]};
+  }
+  save();renderGame();toast('开始记分 🎉');
+});
+$('#micBtn').addEventListener('click',function(){listening?stopVoice():startVoice()});
+$('#textBtn').addEventListener('click',function(){
+  var t=$('#textInput').value.trim();
+  if(!t){toast(state.mode==='gd'?'请输入本轮结果，如：甲队获胜':'请输入本轮结果，如：张三加12，李四扣8');return}
+  handleParsedText(t);$('#textInput').value='';
+});
+$('#textInput').addEventListener('keydown',function(e){if(e.key==='Enter')$('#textBtn').click()});
+$('#manualBtn').addEventListener('click',openManual);
+$('#menuBtn').addEventListener('click',openMenu);
+$('#histAllBtn').addEventListener('click',openHistAll);
+$('#warnReset').addEventListener('click',openReset);
+$('#histList').addEventListener('click',function(e){
+  var b=e.target.closest('.undo');if(!b)return;
+  var idx=parseInt(b.getAttribute('data-idx'),10);
+  if(confirm('撤销第 '+(idx+1)+' 轮记录？'))undoRound(idx);
+});
+
+/* ---------- 启动 ---------- */
+state=load();
+if(state)renderGame();else showSetup();
+})();
+</script>
+</body>
+</html>
